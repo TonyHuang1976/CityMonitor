@@ -6,7 +6,7 @@ RemoteCmd::RemoteCmd()
 {
 }
 
-RemoteCmd::RemoteCmd(VideoManager*	manager)
+RemoteCmd::RemoteCmd(VideoManager*  manager)
 {
 }
 

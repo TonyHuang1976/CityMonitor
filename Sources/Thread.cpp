@@ -8,32 +8,32 @@
 #include <pthread.h> 
 #include <assert.h>
 // 在Linux下定义WINAPI为空
-#define		WINAPI		
+#define     WINAPI      
 #endif
 
 ulong WINAPI ThreadFunc(void* param) 
 { 
     Thread* thread = (Thread*) param;
     thread->Start(); 
-	return 1;
+    return 1;
 } 
 void*  ThreadHandler(void* arg){
-	ThreadFunc(arg);
-	return NULL;
+    ThreadFunc(arg);
+    return NULL;
 }
 Thread::Thread()
 {
-	isTerminted = true;
-	lastError = 0;
-	threadID = 0;
+    isTerminted = true;
+    lastError = 0;
+    threadID = 0;
 
 }
 Thread::Thread(BasicTCP* tcpInstance)
 {
-	isTerminted = true;
-	lastError = 0;
-	threadID = 0;
-	basicTCP = tcpInstance ;
+    isTerminted = true;
+    lastError = 0;
+    threadID = 0;
+    basicTCP = tcpInstance ;
 
 }
 Thread::~Thread()
@@ -42,13 +42,13 @@ Thread::~Thread()
 void Thread::Init()
 {
 #ifdef __WIN32__
-	CreateThread( 
-		NULL,               // no security attributes 
-		0,                  // use default stack size  
-		ThreadFunc,         // thread function 
-		this,               // argument to thread function 
-		0,					// use default creation flags 
-		&threadID);         // returns the thread identifier 
+    CreateThread( 
+        NULL,               // no security attributes 
+        0,                  // use default stack size  
+        ThreadFunc,         // thread function 
+        this,               // argument to thread function 
+        0,                  // use default creation flags 
+        &threadID);         // returns the thread identifier 
 #else
 int result=pthread_create(&threadID,NULL,ThreadHandler,this);
 assert(0==result);
@@ -57,22 +57,22 @@ assert(0==result);
 
 ulong Thread::GetError()
 {
-	return lastError;
+    return lastError;
 }
 
 void Thread::Stop()
 {
-	isTerminted = true;
+    isTerminted = true;
 }
 
 bool Thread::IsTerminted()
 {
-	return isTerminted;
+    return isTerminted;
 }
 
 bool Thread::IsInitDone()
 {
-	return initDone;
+    return initDone;
 }
 
 void Thread::Start() 

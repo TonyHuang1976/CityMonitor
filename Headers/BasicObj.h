@@ -12,15 +12,15 @@ class Debugger;
 class BasicObj
 {
 public:
-	BasicObj();
-	virtual ~BasicObj();
+    BasicObj();
+    virtual ~BasicObj();
 
 public:
-	Debugger*	debugger;			// 调试器
+    Debugger*   debugger;           // 调试器
 
 protected:
-	void		SetDebugger(Debugger* debugger);	// 设置调试器
-	void		VcdDump();	// 创建VCD故障诊断信息
+    void        SetDebugger(Debugger* debugger);    // 设置调试器
+    void        VcdDump();  // 创建VCD故障诊断信息
 
 };
 

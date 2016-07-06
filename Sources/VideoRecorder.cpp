@@ -3,9 +3,9 @@
 #include <cstring>
 #include <stdio.h>
 #ifdef __WIN32__
-	#include <direct.h>
+    #include <direct.h>
 #else
-	#include <sys/stat.h>
+    #include <sys/stat.h>
 #endif
 /*
 mode有下列几种形态字符串:
@@ -37,19 +37,19 @@ mode有下列几种形态字符串:
   */
 VideoRecorder::VideoRecorder()
 {
-	strcpy(fileindexpath, RECORD_DATA_PATH);
+    strcpy(fileindexpath, RECORD_DATA_PATH);
 
-	bgtime = NULL;
-	edtime = NULL;
-	filelen = 0;
-	pathlen = 0;
-	path;
-	state = 0;
-	fpsave = NULL;
-	videoLength = 0;
-	recordedVideoList = new ObjBuffer(MAX_FILE_NUM);
-	  
-	ReadVideoRecordsFromFile();  
+    bgtime = NULL;
+    edtime = NULL;
+    filelen = 0;
+    pathlen = 0;
+    path;
+    state = 0;
+    fpsave = NULL;
+    videoLength = 0;
+    recordedVideoList = new ObjBuffer(MAX_FILE_NUM);
+      
+    ReadVideoRecordsFromFile();  
 }
 
 VideoRecorder::~VideoRecorder()
@@ -57,332 +57,332 @@ VideoRecorder::~VideoRecorder()
 }
 
 // 存储本地摄像机视频数据
-bool VideoRecorder::SaveLiveVideo(byte* data, uint dataLen)				
+bool VideoRecorder::SaveLiveVideo(byte* data, uint dataLen)             
 {
-	PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__, " dataLen = %d", dataLen);
+    PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__, " dataLen = %d", dataLen);
 
-	if (NULL == fpsave)
-	{
-		if (!CreateHistoryVideo())
-		{
-			return false;
-		}
-	}
+    if (NULL == fpsave)
+    {
+        if (!CreateHistoryVideo())
+        {
+            return false;
+        }
+    }
 
-	fwrite(data, sizeof(byte), dataLen, fpsave);
+    fwrite(data, sizeof(byte), dataLen, fpsave);
 
-	videoLength += dataLen;
+    videoLength += dataLen;
 
-	if (videoLength > MAX_FILE_LEN)
-	{
-		uint write_index = GetHistoryVideos()->GetWriteIndex();
-		HistoryVideo* hv = (HistoryVideo*)(GetHistoryVideos()->GetObjectAt(write_index));
-		if (hv != NULL)
-		{
-			std::string ppath = hv->GetPath();
-			remove(ppath.c_str());
-		}
+    if (videoLength > MAX_FILE_LEN)
+    {
+        uint write_index = GetHistoryVideos()->GetWriteIndex();
+        HistoryVideo* hv = (HistoryVideo*)(GetHistoryVideos()->GetObjectAt(write_index));
+        if (hv != NULL)
+        {
+            std::string ppath = hv->GetPath();
+            remove(ppath.c_str());
+        }
 
-		fclose(fpsave);
-		fpsave = NULL;
-		RefreshCurHistoryVideo();		//b保存当前HistoryVideo信息
+        fclose(fpsave);
+        fpsave = NULL;
+        RefreshCurHistoryVideo();       //b保存当前HistoryVideo信息
 
-//		delete hv;
-		PrintVideoRecords();            //将记录存入文件
+//      delete hv;
+        PrintVideoRecords();            //将记录存入文件
 
-		videoLength = 0;
-		return true;
-	}
-	return true;
+        videoLength = 0;
+        return true;
+    }
+    return true;
 }
 
 // 获取历史视频文件清单
-ObjBuffer* VideoRecorder::GetHistoryVideos()					
+ObjBuffer* VideoRecorder::GetHistoryVideos()                    
 {
-	PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__);
-	return recordedVideoList;
+    PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__);
+    return recordedVideoList;
 }
 // 按指定的速度读取视频文件
-int	VideoRecorder::ReadVideo(byte* buf, byte speed)						
+int VideoRecorder::ReadVideo(byte* buf, byte speed)                     
 {
-	PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__, " speed = %d", speed);
-	return 0;
+    PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__, " speed = %d", speed);
+    return 0;
 }
 // 添加欲播放的历史视频信息进播放清单
-void VideoRecorder::AddRecodedVideo(HistoryVideo* historyVideo)		
+void VideoRecorder::AddRecodedVideo(HistoryVideo* historyVideo)     
 {
-	PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__);
-	recordedVideoList->AddObject(historyVideo);
+    PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__);
+    recordedVideoList->AddObject(historyVideo);
 }
 // 寻找包含指定时间的视频
-HistoryVideo* VideoRecorder::FindHistoryVideo(DateTime startTime)			
+HistoryVideo* VideoRecorder::FindHistoryVideo(DateTime startTime)           
 {
-	PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__);
+    PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__);
 
-	ObjBuffer* obj = GetHistoryVideos();
+    ObjBuffer* obj = GetHistoryVideos();
 
-	uint curIndex = obj->GetWriteIndex();
-	uint index;	
-	uint circleLen = obj->GetCircleLen();
-	for (int i = 0; i < circleLen; i++)
-	{
-		index = (curIndex + i) % circleLen;
-		HistoryVideo* p = ((HistoryVideo*)obj->GetObjectAt(index));
-			
-		if (p->IsInTimeRange(startTime))
-		{
-			return p;
-		}
-	}
-	return NULL;
+    uint curIndex = obj->GetWriteIndex();
+    uint index; 
+    uint circleLen = obj->GetCircleLen();
+    for (int i = 0; i < circleLen; i++)
+    {
+        index = (curIndex + i) % circleLen;
+        HistoryVideo* p = ((HistoryVideo*)obj->GetObjectAt(index));
+            
+        if (p->IsInTimeRange(startTime))
+        {
+            return p;
+        }
+    }
+    return NULL;
 }
 void VideoRecorder::PrintVideoRecords()
 {
-	char chpath[MAX_FILE_PATH];
+    char chpath[MAX_FILE_PATH];
 #ifdef __WIN32__
-	getcwd(chpath, MAX_FILE_PATH); 
+    getcwd(chpath, MAX_FILE_PATH); 
 #endif
-	strcpy(chpath, fileindexpath);
-	strcat(chpath, "index.index");
+    strcpy(chpath, fileindexpath);
+    strcat(chpath, "index.index");
 
-	FILE *fpindex = fopen(chpath, "wb+");
+    FILE *fpindex = fopen(chpath, "wb+");
 
-	ObjBuffer* obj = GetHistoryVideos();
+    ObjBuffer* obj = GetHistoryVideos();
 
-	uint curIndex = obj->GetWriteIndex();
-	uint index;	
-	uint circleLen = obj->GetCircleLen();
-	for (int i = 0; i < circleLen; i++)
-	{
-		index = (curIndex + i) % circleLen;
-		HistoryVideo* p = ((HistoryVideo*)obj->GetObjectAt(index));
-			
-		if (p != NULL)
-		{
-			p->SaveRecord(fpindex);		
-		}
-	}
+    uint curIndex = obj->GetWriteIndex();
+    uint index; 
+    uint circleLen = obj->GetCircleLen();
+    for (int i = 0; i < circleLen; i++)
+    {
+        index = (curIndex + i) % circleLen;
+        HistoryVideo* p = ((HistoryVideo*)obj->GetObjectAt(index));
+            
+        if (p != NULL)
+        {
+            p->SaveRecord(fpindex);     
+        }
+    }
 
-	fclose(fpindex);
+    fclose(fpindex);
 }
 void VideoRecorder::ReadVideoRecordsFromFile()                 // 从索引读出日志文件 
 {
-	char chpath[MAX_FILE_PATH];  
+    char chpath[MAX_FILE_PATH];  
 #ifdef __WIN32__
-	getcwd(chpath, MAX_FILE_PATH); 
+    getcwd(chpath, MAX_FILE_PATH); 
 #endif
-	strcpy(chpath, fileindexpath);
-	strcat(chpath, "index.index");
+    strcpy(chpath, fileindexpath);
+    strcat(chpath, "index.index");
 
-	FILE *fpindex = fopen(chpath, "rb");
-	if (NULL == fpindex)
-	{
-		return;
-	}
-	uint flen = 0;
-	uint flenindex = 0;
-	uint freadstep = 10240;
-	fseek(fpindex, 0L, SEEK_END); /* 定位到文件末尾 */
-	flen = ftell(fpindex); /* 得到文件大小 */
+    FILE *fpindex = fopen(chpath, "rb");
+    if (NULL == fpindex)
+    {
+        return;
+    }
+    uint flen = 0;
+    uint flenindex = 0;
+    uint freadstep = 10240;
+    fseek(fpindex, 0L, SEEK_END); /* 定位到文件末尾 */
+    flen = ftell(fpindex); /* 得到文件大小 */
 
-	fseek(fpindex, 0L, SEEK_SET); /* 定位到文件头 */
+    fseek(fpindex, 0L, SEEK_SET); /* 定位到文件头 */
 
-	byte buf[1024];
-	memset(buf, 0, sizeof(buf));
-	if (fpindex != NULL)
-	{
-		fseek(fpindex, 0L, SEEK_SET);
-		uint freadlen = 0;
-		while (flenindex < flen)
-		{
-			freadlen = 0;
-			if (flenindex + freadstep < flen) {freadlen = flenindex;} else {freadlen = flen - flenindex;}
+    byte buf[1024];
+    memset(buf, 0, sizeof(buf));
+    if (fpindex != NULL)
+    {
+        fseek(fpindex, 0L, SEEK_SET);
+        uint freadlen = 0;
+        while (flenindex < flen)
+        {
+            freadlen = 0;
+            if (flenindex + freadstep < flen) {freadlen = flenindex;} else {freadlen = flen - flenindex;}
 
-			int numread = fread(buf, sizeof(byte), freadlen, fpindex);
-			AddRecodedVideo((byte*)buf, numread);
-			flenindex += numread;
-		}
-	}
+            int numread = fread(buf, sizeof(byte), freadlen, fpindex);
+            AddRecodedVideo((byte*)buf, numread);
+            flenindex += numread;
+        }
+    }
 }
 
 void VideoRecorder::AddRecodedVideo(byte* historyVideo, int len)
 {
-	int curindex = 0;
-	
-	while(curindex < len)
-	{
-		byte b = historyVideo[curindex];
-		switch(state)
-		{
-		case 0:	//开始年
-			bgtime = new DateTime;
-			bgtime->SetYear(b);
-			curindex++; state++;
-			break;
-		case 1: //开始月
-			bgtime->SetMouth(b);
-			curindex++; state++;
-			break;
-		case 2: //开始日
-			bgtime->SetDay(b);
-			curindex++; state++;
-			break;
-		case 3: //开始时
-			bgtime->SetHour(b);
-			curindex++; state++;
-			break;
-		case 4: //开始分
-			bgtime->SetMin(b);
-			curindex++; state++;
-			break;
-		case 5: //开始秒
-			bgtime->SetSec(b);
-			curindex++; state++;
-			break;
-		case 6: //结束年
-			edtime = new DateTime;
-			edtime->SetYear(b);
-			curindex++; state++;
-			break;
-		case 7: //结束月
-			edtime->SetMouth(b);
-			curindex++; state++;
-			break;
-		case 8: //结束日
-			edtime->SetDay(b);
-			curindex++; state++;
-			break;
-		case 9: //结束时
-			edtime->SetHour(b);
-			curindex++; state++;
-			break;
-		case 10: //结束分
-			edtime->SetMin(b);
-			curindex++; state++;
-			break;
-		case 11: //结束秒
-			edtime->SetSec(b);
-			curindex++; state++;
-			break;
-		case 12: //文件长度1
-			filelen += b;
-			curindex++; state++;
-			break;
-		case 13: //文件长度2
-			filelen += b<<8;
-			curindex++; state++;
-			break;
-		case 14: //文件长度3
-			filelen += b<<16;
-			curindex++; state++;
-			break;
-		case 15: //文件长度4
-			filelen += b<<24;
-			curindex++; state++;
-			break;
-		case 16: //路径长度
-			pathlen = b;
-			curindex++; state++;
-			break;
-		case 17: //路径
-			if (path.length() < pathlen)
-			{
-				path += (char)b;
-			}
-			if(path.length() == pathlen)
-			{
-				state = 0;
-				HistoryVideo* h = new HistoryVideo;
-				h->SetStartTime(bgtime);
-				h->SetEndTime(edtime);
-				h->SetPath(path);
-				h->SetVideoLen(filelen);
-				AddRecodedVideo(h);
+    int curindex = 0;
+    
+    while(curindex < len)
+    {
+        byte b = historyVideo[curindex];
+        switch(state)
+        {
+        case 0: //开始年
+            bgtime = new DateTime;
+            bgtime->SetYear(b);
+            curindex++; state++;
+            break;
+        case 1: //开始月
+            bgtime->SetMouth(b);
+            curindex++; state++;
+            break;
+        case 2: //开始日
+            bgtime->SetDay(b);
+            curindex++; state++;
+            break;
+        case 3: //开始时
+            bgtime->SetHour(b);
+            curindex++; state++;
+            break;
+        case 4: //开始分
+            bgtime->SetMin(b);
+            curindex++; state++;
+            break;
+        case 5: //开始秒
+            bgtime->SetSec(b);
+            curindex++; state++;
+            break;
+        case 6: //结束年
+            edtime = new DateTime;
+            edtime->SetYear(b);
+            curindex++; state++;
+            break;
+        case 7: //结束月
+            edtime->SetMouth(b);
+            curindex++; state++;
+            break;
+        case 8: //结束日
+            edtime->SetDay(b);
+            curindex++; state++;
+            break;
+        case 9: //结束时
+            edtime->SetHour(b);
+            curindex++; state++;
+            break;
+        case 10: //结束分
+            edtime->SetMin(b);
+            curindex++; state++;
+            break;
+        case 11: //结束秒
+            edtime->SetSec(b);
+            curindex++; state++;
+            break;
+        case 12: //文件长度1
+            filelen += b;
+            curindex++; state++;
+            break;
+        case 13: //文件长度2
+            filelen += b<<8;
+            curindex++; state++;
+            break;
+        case 14: //文件长度3
+            filelen += b<<16;
+            curindex++; state++;
+            break;
+        case 15: //文件长度4
+            filelen += b<<24;
+            curindex++; state++;
+            break;
+        case 16: //路径长度
+            pathlen = b;
+            curindex++; state++;
+            break;
+        case 17: //路径
+            if (path.length() < pathlen)
+            {
+                path += (char)b;
+            }
+            if(path.length() == pathlen)
+            {
+                state = 0;
+                HistoryVideo* h = new HistoryVideo;
+                h->SetStartTime(bgtime);
+                h->SetEndTime(edtime);
+                h->SetPath(path);
+                h->SetVideoLen(filelen);
+                AddRecodedVideo(h);
 
-				bgtime = NULL;
-				edtime = NULL;
-				path   = "";
-				filelen = 0;
-			}
-			curindex++;
-			break;
-		}
-	}
+                bgtime = NULL;
+                edtime = NULL;
+                path   = "";
+                filelen = 0;
+            }
+            curindex++;
+            break;
+        }
+    }
 }
 
 bool VideoRecorder::CreateHistoryVideo()                       // 创建新的索引文件并添加到历史视频列表中   
 {
-	startTime = new DateTime;
-	char path[MAX_FILE_PATH];
-	char dir[MAX_FILE_PATH];
-	memset(path, '\0', sizeof(path));
-	memset(dir, '\0', sizeof(path));
-	sprintf(path, "%s%02d%02d%02d\\%02d%02d%02d.h264", fileindexpath, startTime->GetYear(), startTime->GetMouth(), startTime->GetDay(), startTime->GetHour(), startTime->GetMin(), startTime->GetSec());
-	sprintf(dir, "%s%02d%02d%02d\\", fileindexpath, startTime->GetYear(), startTime->GetMouth(), startTime->GetDay());
+    startTime = new DateTime;
+    char path[MAX_FILE_PATH];
+    char dir[MAX_FILE_PATH];
+    memset(path, '\0', sizeof(path));
+    memset(dir, '\0', sizeof(path));
+    sprintf(path, "%s%02d%02d%02d\\%02d%02d%02d.h264", fileindexpath, startTime->GetYear(), startTime->GetMouth(), startTime->GetDay(), startTime->GetHour(), startTime->GetMin(), startTime->GetSec());
+    sprintf(dir, "%s%02d%02d%02d\\", fileindexpath, startTime->GetYear(), startTime->GetMouth(), startTime->GetDay());
 
-	if (CheckFileDir(fileindexpath) < 0)
-	{
-		return false;
-	}
+    if (CheckFileDir(fileindexpath) < 0)
+    {
+        return false;
+    }
 
-	if (CheckFileDir(dir) < 0)
-	{
-		return false;
-	}
+    if (CheckFileDir(dir) < 0)
+    {
+        return false;
+    }
 
-	if (!CreateFile(path))
-	{
-		return false;
-	}
+    if (!CreateFile(path))
+    {
+        return false;
+    }
 
-	pathfile = path;
-//	hVideo = new HistoryVideo;
-//	hVideo->SetPath(path);
+    pathfile = path;
+//  hVideo = new HistoryVideo;
+//  hVideo->SetPath(path);
 
-	return true;
+    return true;
 }
 
 bool VideoRecorder::RefreshCurHistoryVideo()
 {
-	endTime = new DateTime;
+    endTime = new DateTime;
 
-	ObjBuffer* obj = GetHistoryVideos();
-	uint curIndex = obj->GetWriteIndex();
+    ObjBuffer* obj = GetHistoryVideos();
+    uint curIndex = obj->GetWriteIndex();
 
-	hVideo = (HistoryVideo*)(obj->GetObjectAt(curIndex));
+    hVideo = (HistoryVideo*)(obj->GetObjectAt(curIndex));
 
-	if (NULL == hVideo)
-	{
-		hVideo = new HistoryVideo;
-	}
+    if (NULL == hVideo)
+    {
+        hVideo = new HistoryVideo;
+    }
 
-	hVideo->SetStartTime(startTime);
-	hVideo->SetEndTime(endTime);
-	hVideo->SetVideoLen(videoLength);
-	hVideo->SetPath(pathfile);
-	GetHistoryVideos()->AddObject(hVideo);
+    hVideo->SetStartTime(startTime);
+    hVideo->SetEndTime(endTime);
+    hVideo->SetVideoLen(videoLength);
+    hVideo->SetPath(pathfile);
+    GetHistoryVideos()->AddObject(hVideo);
 
-	startTime    = NULL;	 
-	endTime      = NULL;	 
-	pathfile     = "";	 
-	videoLength  = 0;	 
-	fpsave       = NULL;  
-	hVideo       = NULL;
-	
-	return true;
+    startTime    = NULL;     
+    endTime      = NULL;     
+    pathfile     = "";   
+    videoLength  = 0;    
+    fpsave       = NULL;  
+    hVideo       = NULL;
+    
+    return true;
 }
 
 
 int VideoRecorder::CheckFileDir(char* dir)
 {
-	FILE *fp = NULL;  
-	char TempFilePath[256];  
+    FILE *fp = NULL;  
+    char TempFilePath[256];  
  
-	strcpy(TempFilePath, dir);  
+    strcpy(TempFilePath, dir);  
     strcat(TempFilePath, ".temp.fortest");  
     fp = fopen(TempFilePath,"w+");  
 
-	if (fp == 0)  
+    if (fp == 0)  
     {  
 #ifdef __WIN32__
         if(mkdir(dir)==0)  
@@ -406,16 +406,16 @@ int VideoRecorder::CheckFileDir(char* dir)
 
 bool VideoRecorder::CreateFile(char* path)
 {
-	fpsave = fopen(path, "wb+");
+    fpsave = fopen(path, "wb+");
 
-	if (fp == NULL)
-	{
-		return false;
-	}
-	else
-	{
-		return true;
-	}
+    if (fp == NULL)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 
-	return true;
+    return true;
 }

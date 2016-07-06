@@ -11,13 +11,13 @@ class VideoManager;
 class RemoteCmd : BasicObj
 {
 public:
-	RemoteCmd();
-	RemoteCmd(VideoManager*	manager);
-	virtual ~RemoteCmd();
+    RemoteCmd();
+    RemoteCmd(VideoManager* manager);
+    virtual ~RemoteCmd();
 
 private:
-	VideoManager*	manager;					// 本视频节点的视频管理模块
+    VideoManager*   manager;                    // 本视频节点的视频管理模块
 
 public:
-	void	Decode(byte* command);				// 远程下行命令译码
+    void    Decode(byte* command);              // 远程下行命令译码
 };

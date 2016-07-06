@@ -59,42 +59,42 @@ static LONG _g_lRealPlayHandle = 0;
 static LONG _g_lPort = 0;           //全局的播放库port号
 static LONG _g_lUserID = 0;
 
-void CALLBACK g_RealDataCallBack_V30(LONG lRealHandle, DWORD dwDataType, BYTE *pBuffer,DWORD dwBufSize,DWORD dwUser)
+void CALLBACK g_RealDataCallBack_V30(LONG lRealHandle, DWORD dwDataType, BYTE *pBuffer, DWORD dwBufSize, DWORD dwUser)
 {
 #ifdef _PLAY_ON_WINDOW
     HWND hWnd = GetConsoleWindow();
 #endif
 
-	switch (dwDataType)
-	{
+    switch (dwDataType)
+    {
         case NET_DVR_SYSHEAD: //系统头
         {
             if ( !PlayM4_GetPort(&_g_lPort) )  //获取播放库未使用的通道号
-    		{
-    			break;
-    		}
-    		//m_iPort = _g_lPort; //第一次回调的是系统头，将获取的播放库port号赋值给全局port，下次回调数据时即使用此port号播放
-    		if (dwBufSize > 0)
-    		{
-    			if ( !PlayM4_SetStreamOpenMode(_g_lPort, STREAME_REALTIME) )  //设置实时流播放模式
-    			{
-    				break;
-    			}
+            {
+                break;
+            }
+            //m_iPort = _g_lPort; //第一次回调的是系统头，将获取的播放库port号赋值给全局port，下次回调数据时即使用此port号播放
+            if (dwBufSize > 0)
+            {
+                if ( !PlayM4_SetStreamOpenMode(_g_lPort, STREAME_REALTIME) )  //设置实时流播放模式
+                {
+                    break;
+                }
                 
-    			if ( !PlayM4_OpenStream(_g_lPort, pBuffer, dwBufSize, 1024 * 1024) ) //打开流接口
-    			{
-    				break;
-    			}
+                if ( !PlayM4_OpenStream(_g_lPort, pBuffer, dwBufSize, 1024 * 1024) ) //打开流接口
+                {
+                    break;
+                }
                 #ifdef _PLAY_ON_WINDOW
-    			if ( !PlayM4_Play(_g_lPort, hWnd) ) //播放开始
-    			{
-    				break;
-    			}
+                if ( !PlayM4_Play(_g_lPort, hWnd) ) //播放开始
+                {
+                    break;
+                }
                 #else
                 if ( !PlayM4_Play(_g_lPort, NULL) ) //播放开始
-    			{
-    				break;
-    			}
+                {
+                    break;
+                }
                 #endif
                 
                 #ifdef _PRINT_HEXDATA
@@ -113,43 +113,43 @@ void CALLBACK g_RealDataCallBack_V30(LONG lRealHandle, DWORD dwDataType, BYTE *p
                 FILE*       fpsave;
                 fpsave = fopen("test.record", "ab+");
 
-            	if ( fpsave == NULL )
-            	{
-        			printf("err:open file failed\n");
-            		return;
-            	}
+                if ( fpsave == NULL )
+                {
+                    printf("err:open file failed\n");
+                    return;
+                }
                 fwrite(pBuffer, dwBufSize, 1, fpsave);
                 fclose(fpsave);
                 #endif /* ENDIF _SAVE_H264_STREAM */
-    		}
+            }
         }
-		
+        
         case NET_DVR_STREAMDATA:   //码流数据
         {
             if ( dwBufSize > 0 && _g_lPort != -1 )
-    		{
-    			if ( !PlayM4_InputData(_g_lPort, pBuffer, dwBufSize) )
-    			{
-    				break;
-    			} 
+            {
+                if ( !PlayM4_InputData(_g_lPort, pBuffer, dwBufSize) )
+                {
+                    break;
+                } 
                 #ifdef _SAVE_H264_STREAM
                 FILE*       fpsave;            // 待写视频文件的索引文件指针
                 fpsave = fopen("test.record", "ab+");
 
-            	if ( fpsave == NULL )
-            	{
-    				printf("err:open file failed\n");
-            		return;
-            	}
+                if ( fpsave == NULL )
+                {
+                    printf("err:open file failed\n");
+                    return;
+                }
                 fwrite(pBuffer, dwBufSize, 1, fpsave);
                 fclose(fpsave);
                 #endif
-    		}
+            }
         }
         
         default:
         break;
-	}
+    }
 }
 
 void CALLBACK g_ExceptionCallBack(DWORD dwType, LONG lUserID, LONG lHandle, void *pUser)
@@ -163,7 +163,7 @@ void CALLBACK g_ExceptionCallBack(DWORD dwType, LONG lUserID, LONG lHandle, void
         case EXCEPTION_RECONNECT:    //预览时重连
         sw_inf_printf("----------reconnect--------%d\n", time(NULL));
         break;
-    	default:
+        default:
         break;
     }
 }

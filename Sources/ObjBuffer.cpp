@@ -5,7 +5,7 @@
  * Author      : 董超
  * Version     : V1.0.0
  * Copyright   : 本软件由重庆思委夫特科技有限公司开发并拥有所有权利，在无思委夫特书面授权许可的情况下，任何其他团体或个人
- *				 不得对本文件进行部分或全部的拷贝，否则，本公司将依法追究相应的法律责任。
+ *               不得对本文件进行部分或全部的拷贝，否则，本公司将依法追究相应的法律责任。
  * Description : 视频单元管理模块。
  ************************************************************************************************************************
  * Revision History:
@@ -29,63 +29,63 @@
  */
 ObjBuffer::ObjBuffer(uint bufLen)
 {
-	PRINT(ALWAYS_PRINT, "ObjBuffer", __FUNCTION__, __LINE__, " 创建一个长度为 %d 的对象指针循环缓冲器", bufLen);
-	
-	this->bufLen = bufLen;
-	circleLen = bufLen;
-	buffer = new void*[bufLen];
-	memset(buffer, NULL, sizeof(void*) * bufLen);
+    PRINT(ALWAYS_PRINT, "ObjBuffer", __FUNCTION__, __LINE__, " 创建一个长度为 %d 的对象指针循环缓冲器", bufLen);
+    
+    this->bufLen = bufLen;
+    circleLen = bufLen;
+    buffer = new void*[bufLen];
+    memset(buffer, NULL, sizeof(void*) * bufLen);
 
-	rdIndex = 0;
-	wrIndex = 0;
-	numObjects = 0;
+    rdIndex = 0;
+    wrIndex = 0;
+    numObjects = 0;
 }
 ObjBuffer::~ObjBuffer()
 {
-	PRINT(ALWAYS_PRINT, "ObjBuffer", __FUNCTION__, __LINE__, " 删除一个对象指针循环缓冲器");
+    PRINT(ALWAYS_PRINT, "ObjBuffer", __FUNCTION__, __LINE__, " 删除一个对象指针循环缓冲器");
 
-	delete [] buffer;
+    delete [] buffer;
 }
 /**
  * 随机读取缓冲器内所存储的对象指针，欲读出的对象指针由caller在入参中指定
  */
 void* ObjBuffer::GetObjectAt(uint index)
 {
-	// 获取操作锁，阻止其它线程对本对象缓冲器进行操作
-	lock = true;	
-	PRINT(DEBUG_LEVEL_3, "ObjBuffer", __FUNCTION__, __LINE__, " 获取位于单元 %d 的ObjBuffer对象指针", index);	
+    // 获取操作锁，阻止其它线程对本对象缓冲器进行操作
+    lock = true;    
+    PRINT(DEBUG_LEVEL_3, "ObjBuffer", __FUNCTION__, __LINE__, " 获取位于单元 %d 的ObjBuffer对象指针", index);   
 
-	if (index >= circleLen)
-	{
-		return NULL;
-	}
-	rdIndex = index;
-	// 释放操作锁，允许其它线程对本对象进行操作
-	lock = false;	
-	return buffer[rdIndex];
+    if (index >= circleLen)
+    {
+        return NULL;
+    }
+    rdIndex = index;
+    // 释放操作锁，允许其它线程对本对象进行操作
+    lock = false;   
+    return buffer[rdIndex];
 }
 /**
  * 获取缓冲器内下一个单元存储的对象指针，读出内容是当前读指针所指向的单元的下一个单元。调用结束后，读指针指向实际读出的单元。
  */
 void* ObjBuffer::GetNextObject()
 {
-	// 获取操作锁，阻止其它线程对本对象缓冲器进行操作
-	lock = true;	
-	rdIndex++;
-	PRINT(DEBUG_LEVEL_3, "ObjBuffer", __FUNCTION__, __LINE__, " 获取位于单元 %d 的ObjBuffer对象指针", rdIndex);
+    // 获取操作锁，阻止其它线程对本对象缓冲器进行操作
+    lock = true;    
+    rdIndex++;
+    PRINT(DEBUG_LEVEL_3, "ObjBuffer", __FUNCTION__, __LINE__, " 获取位于单元 %d 的ObjBuffer对象指针", rdIndex);
 
 
-	if (rdIndex >= circleLen)
-	{
-		// 读指针越界，恢复原值
-		rdIndex--;
-		// 释放操作锁，允许其它线程对本对象进行操作
-		lock = false;
-		return NULL;
-	}
-	// 释放操作锁，允许其它线程对本对象进行操作
-	lock = false;	
-	return buffer[rdIndex];
+    if (rdIndex >= circleLen)
+    {
+        // 读指针越界，恢复原值
+        rdIndex--;
+        // 释放操作锁，允许其它线程对本对象进行操作
+        lock = false;
+        return NULL;
+    }
+    // 释放操作锁，允许其它线程对本对象进行操作
+    lock = false;   
+    return buffer[rdIndex];
 }
 /**
  * 添加指定的对象指针到缓冲器当前写指针所指向的单元。写操作完成后，写指针将被修改为指向下一个单元，如果修改后的写指针超出了缓冲器的循环长度，
@@ -93,58 +93,58 @@ void* ObjBuffer::GetNextObject()
  */
 void ObjBuffer::AddObject(void* obj)
 {
-	// 获取操作锁，阻止其它线程对本对象缓冲器进行操作
-	lock = true;	
-	PRINT(DEBUG_LEVEL_3, "ObjBuffer", __FUNCTION__, __LINE__, " 将指定对象指针存入ObjBuffer单元 %d 中", wrIndex);
+    // 获取操作锁，阻止其它线程对本对象缓冲器进行操作
+    lock = true;    
+    PRINT(DEBUG_LEVEL_3, "ObjBuffer", __FUNCTION__, __LINE__, " 将指定对象指针存入ObjBuffer单元 %d 中", wrIndex);
  
-	// 然后将新对象写入到当前位置
-	buffer[wrIndex++] = obj;
+    // 然后将新对象写入到当前位置
+    buffer[wrIndex++] = obj;
 
-	// 检查写指针是否已经到达缓冲器的顶部
-	if (wrIndex == circleLen)
-	{
-		// 实现循环缓冲器的循环功能
-		wrIndex = 0;
-	}
-	// 释放操作锁，允许其它线程对本对象进行操作
-	lock = false;	
+    // 检查写指针是否已经到达缓冲器的顶部
+    if (wrIndex == circleLen)
+    {
+        // 实现循环缓冲器的循环功能
+        wrIndex = 0;
+    }
+    // 释放操作锁，允许其它线程对本对象进行操作
+    lock = false;   
 
-	if (numObjects < circleLen) { numObjects++; }
+    if (numObjects < circleLen) { numObjects++; }
 }
 /**
  * 设置缓冲器循环长度，入参值不得超过创建缓冲器对象时所给的最大长度。当缓冲器写指针达到循环长度时写指针将被归零。
  */
 void ObjBuffer::SetCircleLen(uint len)
 {
-	// 获取操作锁，阻止其它线程对本对象缓冲器进行操作
-	lock = true;	
-	PRINT(DEBUG_LEVEL_1, "ObjBuffer", __FUNCTION__, __LINE__, " 设置对象指针循环缓冲器的循环长度为 %d", wrIndex);
-	if (len <= bufLen) { circleLen = len; }
-	// 释放操作锁，允许其它线程对本对象进行操作
-	lock = false;	
+    // 获取操作锁，阻止其它线程对本对象缓冲器进行操作
+    lock = true;    
+    PRINT(DEBUG_LEVEL_1, "ObjBuffer", __FUNCTION__, __LINE__, " 设置对象指针循环缓冲器的循环长度为 %d", wrIndex);
+    if (len <= bufLen) { circleLen = len; }
+    // 释放操作锁，允许其它线程对本对象进行操作
+    lock = false;   
 }
 bool ObjBuffer::IsLocked()
 {
-	return lock;
+    return lock;
 }
 void ObjBuffer::TakeLock()
 {
-	lock = true;
+    lock = true;
 }
 void ObjBuffer::ReleaseLock()
 {
-	lock = false;
+    lock = false;
 }
 uint ObjBuffer::GetCircleLen()
 {
-	return circleLen;
+    return circleLen;
 }
 uint ObjBuffer::GetWriteIndex()
 {
-	return wrIndex;
+    return wrIndex;
 }
 
 uint ObjBuffer::GetNumEntries()
 {
-	return numObjects;
+    return numObjects;
 }

@@ -4,14 +4,14 @@
 Debugger db;
 BasicObj::BasicObj()
 {
-	SetDebugger(&db);
+    SetDebugger(&db);
 }
 BasicObj::~BasicObj()
 {
 }
 void BasicObj::SetDebugger(Debugger* debugger)
 {
-	this->debugger = debugger;
+    this->debugger = debugger;
 }
 void BasicObj::VcdDump()
 {

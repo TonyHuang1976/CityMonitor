@@ -29,26 +29,26 @@ class VideoManager;
 class Codec :public BasicObj
 {
 public:
-	Codec(void);
-	~Codec(void);
+    Codec(void);
+    ~Codec(void);
 
-	void ParseDataPackage(VideoManager *manger,byte * buffer,int buflen);
-	void SendUpPackage(VideoManager *manger,byte message);
-	void SendUpVideoPackage(VideoManager *manger,byte *buffer,int len);
+    void ParseDataPackage(VideoManager *manger,byte * buffer,int buflen);
+    void SendUpPackage(VideoManager *manger,byte message);
+    void SendUpVideoPackage(VideoManager *manger,byte *buffer,int len);
 private:
-	int siteId;
-	int cameraId;
-	DateTime historyVideoStTime;
-	DateTime historyVideoEndTime;
+    int siteId;
+    int cameraId;
+    DateTime historyVideoStTime;
+    DateTime historyVideoEndTime;
 
 private:
-	void ParseDownPackage(VideoManager *manger,byte * buffer,int buflen);
-	void SendHeartbeatPacket(VideoManager *manger);
-	void SendCameraPos(VideoManager *manger);
-	void SendSitePos(VideoManager *manger);
-	void SendErrorMessage(VideoManager *manger);
-	void SendHistoryVideoList(VideoManager *manger);
-	void SendSystemControl(VideoManager *manger);
-	void SendHistoryVideoList(void);
+    void ParseDownPackage(VideoManager *manger,byte * buffer,int buflen);
+    void SendHeartbeatPacket(VideoManager *manger);
+    void SendCameraPos(VideoManager *manger);
+    void SendSitePos(VideoManager *manger);
+    void SendErrorMessage(VideoManager *manger);
+    void SendHistoryVideoList(VideoManager *manger);
+    void SendSystemControl(VideoManager *manger);
+    void SendHistoryVideoList(void);
 };
 

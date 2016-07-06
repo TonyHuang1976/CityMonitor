@@ -4,17 +4,17 @@
 
 DateTime::DateTime()
 {
-	time_t timep;
-	tm *p;
-	time(&timep);
-	p=localtime(&timep);
+    time_t timep;
+    tm *p;
+    time(&timep);
+    p=localtime(&timep);
 
-	year    = p->tm_year - 100; //c++年是从1900年开始算的
-	month   = p->tm_mon;
-	day     = p->tm_mday;
-	hour    = p->tm_hour;
-	minute  = p->tm_min;
-	second  = p->tm_sec;
+    year    = p->tm_year - 100; //c++年是从1900年开始算的
+    month   = p->tm_mon;
+    day     = p->tm_mday;
+    hour    = p->tm_hour;
+    minute  = p->tm_min;
+    second  = p->tm_sec;
 }
 
 DateTime::~DateTime()
@@ -23,72 +23,72 @@ DateTime::~DateTime()
 
 void DateTime::TimeSync()
 {
-	PRINT(ALWAYS_PRINT, "DateTime", __FUNCTION__, __LINE__);
+    PRINT(ALWAYS_PRINT, "DateTime", __FUNCTION__, __LINE__);
 }
 
 byte DateTime::Compare(byte b1, byte b2)
 {
-	if (b1 == b2)
-	{
-		return 0;
-	}else if (b1 > b2)
-	{
-		return 1;
-	}else if (b1 < b2)
-	{
-		return 2;
-	}
-	return 0;
+    if (b1 == b2)
+    {
+        return 0;
+    }else if (b1 > b2)
+    {
+        return 1;
+    }else if (b1 < b2)
+    {
+        return 2;
+    }
+    return 0;
 }
 
 byte DateTime::Compare(DateTime time1, DateTime time2)
 {
-	PRINT(ALWAYS_PRINT, "DateTime", __FUNCTION__, __LINE__);
+    PRINT(ALWAYS_PRINT, "DateTime", __FUNCTION__, __LINE__);
 
-	int stat = 0;
-	int rest;
-	byte b1 = 0;
-	byte b2 = 0;
-	while(stat < 6)
-	{
-		b1 = 0;
-		b2 = 0;
-		switch(stat)
-		{
-		case 0:
-			b1 = time1.GetYear();
-			b2 = time2.GetYear();
-			break;
-		case 1:
-			b1 = time1.GetMouth();
-			b2 = time2.GetMouth();
-			break;
-		case 2:
-			b1 = time1.GetDay();
-			b2 = time2.GetDay();
-			break;
-		case 3:
-			b1 = time1.GetHour();
-			b2 = time2.GetHour();
-			break;
-		case 4:
-			b1 = time1.GetMin();
-			b2 = time2.GetMin();
-			break;
-		case 5:
-			b1 = time1.GetSec();
-			b2 = time2.GetSec();
-			break;
-		}
-		stat++;
+    int stat = 0;
+    int rest;
+    byte b1 = 0;
+    byte b2 = 0;
+    while(stat < 6)
+    {
+        b1 = 0;
+        b2 = 0;
+        switch(stat)
+        {
+        case 0:
+            b1 = time1.GetYear();
+            b2 = time2.GetYear();
+            break;
+        case 1:
+            b1 = time1.GetMouth();
+            b2 = time2.GetMouth();
+            break;
+        case 2:
+            b1 = time1.GetDay();
+            b2 = time2.GetDay();
+            break;
+        case 3:
+            b1 = time1.GetHour();
+            b2 = time2.GetHour();
+            break;
+        case 4:
+            b1 = time1.GetMin();
+            b2 = time2.GetMin();
+            break;
+        case 5:
+            b1 = time1.GetSec();
+            b2 = time2.GetSec();
+            break;
+        }
+        stat++;
 
-		rest = Compare(b1, b2);
-		if (rest > 0)
-		{
-			return rest;
-		}
-	}
-	return 0;
+        rest = Compare(b1, b2);
+        if (rest > 0)
+        {
+            return rest;
+        }
+    }
+    return 0;
 }
 
 // struct tm {
@@ -104,79 +104,79 @@ byte DateTime::Compare(DateTime time1, DateTime time2)
 // }
 int DateTime::TimeDiffer(DateTime time1, DateTime time2) 
 {
-	PRINT(ALWAYS_PRINT, "DateTime", __FUNCTION__, __LINE__);
+    PRINT(ALWAYS_PRINT, "DateTime", __FUNCTION__, __LINE__);
 
-	tm tmObj1 , tmObj2; 
-	tmObj1.tm_year = time1.GetYear() + 100;  //c++年是从1900年开始算的
-	tmObj1.tm_mon  = time1.GetMouth();  
-	tmObj1.tm_mday = time1.GetDay();  
-	tmObj1.tm_hour = time1.GetHour();  
-	tmObj1.tm_min  = time1.GetMin();  
-	tmObj1.tm_sec  = time1.GetSec();  
+    tm tmObj1 , tmObj2; 
+    tmObj1.tm_year = time1.GetYear() + 100;  //c++年是从1900年开始算的
+    tmObj1.tm_mon  = time1.GetMouth();  
+    tmObj1.tm_mday = time1.GetDay();  
+    tmObj1.tm_hour = time1.GetHour();  
+    tmObj1.tm_min  = time1.GetMin();  
+    tmObj1.tm_sec  = time1.GetSec();  
     tmObj1.tm_isdst= -1;  
 
-	tmObj2.tm_year = time2.GetYear() + 100;  //c++年是从1900年开始算的
-	tmObj2.tm_mon  = time2.GetMouth();  
-	tmObj2.tm_mday = time2.GetDay();  
-	tmObj2.tm_hour = time2.GetHour();  
-	tmObj2.tm_min  = time2.GetMin();  
-	tmObj2.tm_sec  = time2.GetSec();  
+    tmObj2.tm_year = time2.GetYear() + 100;  //c++年是从1900年开始算的
+    tmObj2.tm_mon  = time2.GetMouth();  
+    tmObj2.tm_mday = time2.GetDay();  
+    tmObj2.tm_hour = time2.GetHour();  
+    tmObj2.tm_min  = time2.GetMin();  
+    tmObj2.tm_sec  = time2.GetSec();  
     tmObj2.tm_isdst= -1;  
-	return mktime(&tmObj1) - mktime(&tmObj2);
+    return mktime(&tmObj1) - mktime(&tmObj2);
 }
 
 
 byte DateTime::GetYear()
 {
-	return year;
+    return year;
 }
 
 byte DateTime::GetMouth()
 {
-	return month;
+    return month;
 }
 
 byte DateTime::GetDay()
 {
-	return day;
+    return day;
 }
 
 byte DateTime::GetHour()
 {
-	return hour;
+    return hour;
 }
 
 byte DateTime::GetMin()
 {
-	return minute;
+    return minute;
 }
 
 byte DateTime::GetSec()
 {
-	return second;
+    return second;
 }
 
 void DateTime::SetYear(byte b)
 {
-	year = b;
+    year = b;
 }
 void DateTime::SetMouth(byte b)
 {
-	month = b;
+    month = b;
 }
 void DateTime::SetDay(byte b)
 {
-	day = b;
+    day = b;
 }
 void DateTime::SetHour(byte b)
 {
-	hour = b;
+    hour = b;
 }
 void DateTime::SetMin(byte b)
 {
-	minute = b;
+    minute = b;
 }
 void DateTime::SetSec(byte b)
 {
-	second = b;
+    second = b;
 }
