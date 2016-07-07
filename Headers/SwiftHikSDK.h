@@ -43,6 +43,8 @@ int sw_hik_sdk_init( void );
 void sw_hik_realplay_start( void );
 void sw_hik_realplay_stop( void );
 
+void sw_test_play_local_file( void );
+
 
 #ifdef __cplusplus
 }

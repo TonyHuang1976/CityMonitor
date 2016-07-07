@@ -30,6 +30,7 @@
 int main() 
 {
     sw_hik_sdk_init();
+    //sw_test_play_local_file();
 #if 0
     VideoManager* videoManager = new VideoManager();
 
