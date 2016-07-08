@@ -47,7 +47,7 @@ private:
     byte            remotePort;     // 本视频节点调试器的远程连接TCP/IP通信端口
     char*           remoteIpAddr;   // 本视频节点调试器的远程连接IP地址
     byte            debugLevel;     // 调试等级
-    Buffer*         buffread;       // 读数据buff 
+    Buffer*         buffread;       // 读数据buff
     Buffer*         buffwrite;      // 写数据buff
 
 public:

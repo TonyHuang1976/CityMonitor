@@ -21,17 +21,24 @@
 #include "Buffer.h" 
 #include "Debugger.h" 
 
-TcpConn::TcpConn(byte mode, VideoManager* manager, Buffer* readBuffer, Buffer* writeBuffer)
+TcpConn::TcpConn(byte mode, byte connectType, VideoManager* manager, Buffer* readBuffer, Buffer* writeBuffer)
 {
+    PRINT(ALWAYS_PRINT, "TcpConn", __FUNCTION__, __LINE__);
     this->mode = mode;
+    this->connectType = connectType;
     this->manager = manager;
     this->readBuffer = readBuffer;
     this->writeBuffer = writeBuffer;
 }
 
-TcpConn::TcpConn(byte mode)
+TcpConn::TcpConn(byte mode, byte connectType, VideoManager* manager)
 {
+    PRINT(ALWAYS_PRINT, "TcpConn", __FUNCTION__, __LINE__);
     this->mode = mode;
+    this->connectType = connectType;
+    this->manager = manager;
+    this->readBuffer = NULL;
+    this->writeBuffer = NULL;
 }
 
 TcpConn::~TcpConn()
@@ -45,20 +52,20 @@ void TcpConn::Rebind()
 // 设置网络连接的本地地址和端口
 void TcpConn::SetLocalInfo(char* ipAddr)
 {
-    PRINT(ALWAYS_PRINT, "TcpConn", __FUNCTION__, __LINE__, "ipAddr = %s", ipAddr);
+    //PRINT(ALWAYS_PRINT, "TcpConn", __FUNCTION__, __LINE__, "ipAddr = %s", ipAddr);
     localIpAddr = ipAddr;
 }                           
 // 设置网络连接的本地地址和端口
 void TcpConn::SetLocalInfo(char* ipAddr, uint port)
 {
-    PRINT(ALWAYS_PRINT, "TcpConn", __FUNCTION__, __LINE__, "ipAddr = %s, port = %d", ipAddr, port);
+    //PRINT(ALWAYS_PRINT, "TcpConn", __FUNCTION__, __LINE__, "ipAddr = %s, port = %d", ipAddr, port);
     localIpAddr = ipAddr;
     localPort = port;
 }                           
 // 设置网络连接的远程地址和端口
 void TcpConn::SetRemoteInfo(char* ipAddr, uint port)
 {
-    PRINT(ALWAYS_PRINT, "TcpConn", __FUNCTION__, __LINE__, "ipAddr = %s, port = %d", ipAddr, port);
+    //PRINT(ALWAYS_PRINT, "TcpConn", __FUNCTION__, __LINE__, "ipAddr = %s, port = %d", ipAddr, port);
     remoteIpAddr = ipAddr;
     remotePort = port;
 }                       

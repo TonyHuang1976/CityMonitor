@@ -1,7 +1,10 @@
 #include "VideoRecorder.h"
+#include "Buffer.h" 
+#include "Recorder.h" 
 #include "Debugger.h" 
 #include <cstring>
 #include <stdio.h>
+#include <string>
 #ifdef __WIN32__
     #include <direct.h>
 #else
@@ -35,8 +38,9 @@ mode有下列几种形态字符串:
 　　“rb+” 读写打开一个二进制文件，允许读和写
 　　“ab+” 读写打开一个二进制文件，允许读，或在文件末追加数据
   */
-VideoRecorder::VideoRecorder()
+VideoRecorder::VideoRecorder(Buffer* videoDataBuffer)
 {
+    recorder = new Recorder(this, videoDataBuffer); // 创建自动存储本地摄像机视频数据的录像机
     strcpy(fileindexpath, RECORD_DATA_PATH);
 
     bgtime = NULL;
@@ -45,7 +49,7 @@ VideoRecorder::VideoRecorder()
     pathlen = 0;
     path;
     state = 0;
-    fpsave = NULL;
+    recordingFile = NULL;
     videoLength = 0;
     recordedVideoList = new ObjBuffer(MAX_FILE_NUM);
       
@@ -54,14 +58,16 @@ VideoRecorder::VideoRecorder()
 
 VideoRecorder::~VideoRecorder()
 {
+    delete recorder;
+    // 删除recordedVideoList
 }
 
-// 存储本地摄像机视频数据
-bool VideoRecorder::SaveLiveVideo(byte* data, uint dataLen)             
+// 存储本地摄像机视频数据 - 已经过时，Recorder调试结束时删掉
+bool VideoRecorder::SaveLiveVideoOld(byte* data, uint dataLen)              
 {
     PRINT(ALWAYS_PRINT, "VideoRecorder", __FUNCTION__, __LINE__, " dataLen = %d", dataLen);
 
-    if (NULL == fpsave)
+    if (NULL == recordingFile)
     {
         if (!CreateHistoryVideo())
         {
@@ -69,7 +75,7 @@ bool VideoRecorder::SaveLiveVideo(byte* data, uint dataLen)
         }
     }
 
-    fwrite(data, sizeof(byte), dataLen, fpsave);
+    fwrite(data, sizeof(byte), dataLen, recordingFile);
 
     videoLength += dataLen;
 
@@ -83,12 +89,13 @@ bool VideoRecorder::SaveLiveVideo(byte* data, uint dataLen)
             remove(ppath.c_str());
         }
 
-        fclose(fpsave);
-        fpsave = NULL;
+        fclose(recordingFile);
+        recordingFile = NULL;
         RefreshCurHistoryVideo();       //b保存当前HistoryVideo信息
 
 //      delete hv;
-        PrintVideoRecords();            //将记录存入文件
+        //PrintVideoRecords();            //将记录存入文件
+        SaveVideoRecords();
 
         videoLength = 0;
         return true;
@@ -136,25 +143,28 @@ HistoryVideo* VideoRecorder::FindHistoryVideo(DateTime startTime)
     }
     return NULL;
 }
-void VideoRecorder::PrintVideoRecords()
+// 将记录存入文件。删除文件中的第一个记录，将这里新建的记录放在文件最后（通过先删除所有记录再重建所有记录来实现）
+void VideoRecorder::SaveVideoRecords()
 {
     char chpath[MAX_FILE_PATH];
 #ifdef __WIN32__
     getcwd(chpath, MAX_FILE_PATH); 
 #endif
     strcpy(chpath, fileindexpath);
-    strcat(chpath, "index.index");
-
+    strcat(chpath, "index.bin");
+    // 打开文件，若文件存在则文件长度清零，即该文件内容会消失。若文件不存在则建立该文件。
     FILE *fpindex = fopen(chpath, "wb+");
 
     ObjBuffer* obj = GetHistoryVideos();
-
+    // 获取当前写指针
     uint curIndex = obj->GetWriteIndex();
     uint index; 
+    // 获取存放历史视频记录数据结构指针的循环缓冲器的长度
     uint circleLen = obj->GetCircleLen();
     for (int i = 0; i < circleLen; i++)
     {
         index = (curIndex + i) % circleLen;
+        // 获取循环缓冲器指定位置的历史视频记录数据结构指针
         HistoryVideo* p = ((HistoryVideo*)obj->GetObjectAt(index));
             
         if (p != NULL)
@@ -309,7 +319,7 @@ void VideoRecorder::AddRecodedVideo(byte* historyVideo, int len)
         }
     }
 }
-
+// 创建一个新的历史视频记录
 bool VideoRecorder::CreateHistoryVideo()                       // 创建新的索引文件并添加到历史视频列表中   
 {
     startTime = new DateTime;
@@ -341,7 +351,8 @@ bool VideoRecorder::CreateHistoryVideo()                       // 创建新的索引文
 
     return true;
 }
-
+// 保存当前HistoryVideo信息。如果当前记录位置已经有历史记录存在，那么就用新记录覆盖旧记录
+// 如果当前记录位置没有历史记录存在，就创建一个新记录。
 bool VideoRecorder::RefreshCurHistoryVideo()
 {
     endTime = new DateTime;
@@ -353,7 +364,7 @@ bool VideoRecorder::RefreshCurHistoryVideo()
 
     if (NULL == hVideo)
     {
-        hVideo = new HistoryVideo;
+        hVideo = new HistoryVideo();
     }
 
     hVideo->SetStartTime(startTime);
@@ -366,7 +377,7 @@ bool VideoRecorder::RefreshCurHistoryVideo()
     endTime      = NULL;     
     pathfile     = "";   
     videoLength  = 0;    
-    fpsave       = NULL;  
+    recordingFile       = NULL;  
     hVideo       = NULL;
     
     return true;
@@ -401,14 +412,14 @@ int VideoRecorder::CheckFileDir(char* dir)
     {  
         fclose(fp);  
     }  
-    return 0;  
+    return 1;  
 }
 
 bool VideoRecorder::CreateFile(char* path)
 {
-    fpsave = fopen(path, "wb+");
+    recordingFile = fopen(path, "wb+");
 
-    if (fp == NULL)
+    if (historyVideoIndexFile == NULL)
     {
         return false;
     }
@@ -418,4 +429,9 @@ bool VideoRecorder::CreateFile(char* path)
     }
 
     return true;
+}
+void VideoRecorder::CloseRecordingFile()
+{
+        fclose(recordingFile);
+        recordingFile = NULL;
 }

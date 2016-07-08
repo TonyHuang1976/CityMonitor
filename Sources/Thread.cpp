@@ -51,7 +51,7 @@ void Thread::Init()
         &threadID);         // returns the thread identifier 
 #else
 int result=pthread_create(&threadID,NULL,ThreadHandler,this);
-assert(0==result);
+assert( 0 == result );
 #endif
 }
 

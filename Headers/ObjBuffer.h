@@ -35,8 +35,8 @@ public:
     virtual ~ObjBuffer();
 
 private:
-    uint    bufLen;                         // 缓冲器对象指针个数   
-    uint    circleLen;                      // 缓冲器循环长度   
+    uint    bufLen;                         // 缓冲器对象指针个数    
+    uint    circleLen;                      // 缓冲器循环长度  
     uint    rdIndex;                        // 循环缓冲器当前读地址
     uint    wrIndex;                        // 循环缓冲器当前写地址
     void**  buffer;                         // C++对象指针循环缓冲器

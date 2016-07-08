@@ -24,14 +24,8 @@
 #ifndef __WIN32__
 #include <unistd.h>
 #endif
-
-#include "SwiftHikSDK.h"
-
 int main() 
 {
-    sw_hik_sdk_init();
-    //sw_test_play_local_file();
-#if 0
     VideoManager* videoManager = new VideoManager();
 
     while (1)
@@ -41,23 +35,7 @@ int main()
         #else
             sleep(1000);
         #endif
-        videoManager->Run();
     }
 
-    VideoRecorder vrd;
-
-    char buf[1024];
-    memset(buf, 0, sizeof(buf));
-    while (1)
-    {
-        vrd.SaveLiveVideo((byte*)buf, 1024);
-#ifdef __WIN32__
-        Sleep(1000);
-#else
-        sleep(1000);
-#endif
-    }
-#endif
     return 0;
 }
-

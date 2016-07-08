@@ -20,9 +20,9 @@ public:
 private:
     ulong       threadID;           // 线程ID，以后完善安全机制时使用
     bool        initDone;           // 是否完成初始化标志
-    BasicTCP*   basicTCP;//TCP对象
 
 protected:
+    BasicTCP*   basicTCP;//TCP对象
     bool        isTerminted;        // 是否已经停止标志
     ulong       lastError;          // 线程运行至今最后一次出现的错误
   

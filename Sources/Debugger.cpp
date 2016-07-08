@@ -41,14 +41,14 @@ Debugger::Debugger()
     fflush(logger);
     // 释放动态内存
     delete [] info;
+/*
+    buffread  = new Buffer(BUF_SEND_LEN,1);
+    buffwrite = new Buffer(BUF_SEND_LEN,2);
 
-    buffread  = new Buffer(BUF_SEND_LEN);
-    buffwrite = new Buffer(BUF_SEND_LEN);
-
-    TcpConnect = new TcpConn(MODE_CLIENT, NULL, buffread, buffwrite);
+    TcpConnect = new TcpConn(MODE_CLIENT, 0,NULL, buffread, buffwrite);
     TcpConnect->SetRemoteInfo("192.168.1.153", 5002);
     TcpConnect = NULL;
-//  TcpConnect->CreateClient();
+*/
 }
 
 Debugger::~Debugger()
@@ -93,7 +93,6 @@ void Debugger::Print(byte dbgLevel, char* fileName, char* format, ...)
         fflush(logger);
     }
 }
-
 void Debugger::Print(byte dbgLevel, char* fileName, byte lineNumber, char* format, ...)
 {
     if (dbgLevel <= debugLevel) 
@@ -142,6 +141,7 @@ void Debugger::Print(byte dbgLevel, char* className, const char* funcName, byte 
         fflush(logger);
     }
 }
+
 void Debugger::Print(byte dbgLevel, char* className, const char* funcName, byte lineNumber)
 {
     if (dbgLevel <= debugLevel) 
@@ -163,6 +163,7 @@ void Debugger::Print(byte dbgLevel, char* className, const char* funcName, byte 
         fflush(logger);
     }
 }
+
 void Debugger::SetDebugLevel(byte debugLevel) 
 {
     this->debugLevel = debugLevel;
@@ -214,7 +215,7 @@ void Debugger::ExtractArgs(char* strBuffer, va_list varList, char* format)
                 // 将index值调整到字符串尾部
                 index = strlen(strBuffer);
                 break;
-            case 's': /* 提取字符串 */              
+            case 's': /* 提取字符串 */               
                 fmtChar = va_arg(varList ,char*);
                 strcpy(strBuffer + index, fmtChar);
                 index = strlen(strBuffer);
@@ -232,13 +233,14 @@ void Debugger::ExtractArgs(char* strBuffer, va_list varList, char* format)
 
 void Debugger::SendToMonitorServer(char* buf, int len)
 {
+#if 0
     static uint packet_count = 0;
     if (TcpConnect != NULL )
     {
         SendBuf[0] = DATA_PACKET_HEADER;
 
         SendBuf[1] = packet_count++;                // 帧同步计数：测试时使用
-        SendBuf[2] = DATA_TYPE_FREE_TEXT;           // 数据类型为自由文字   
+        SendBuf[2] = DATA_TYPE_FREE_TEXT;           // 数据类型为自由文字    
         SendBuf[3] = len;       
 
         byte checksum = 0;
@@ -251,8 +253,7 @@ void Debugger::SendToMonitorServer(char* buf, int len)
 
         SendBuf[i + 4] = checksum;          // 设置校验码：注意，它可能为零，所以不能对已经计算了校验码的packet进行字符串操作       
 
-//      TcpConnect->Send((byte*)SendBuf, i + 5);
-
-        buffwrite->Write((byte*)SendBuf, i + 5);
+        //buffwrite->Write((byte*)SendBuf, i + 5);
     }
+#endif
 }

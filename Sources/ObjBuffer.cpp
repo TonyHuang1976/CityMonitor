@@ -53,7 +53,7 @@ void* ObjBuffer::GetObjectAt(uint index)
 {
     // 获取操作锁，阻止其它线程对本对象缓冲器进行操作
     lock = true;    
-    PRINT(DEBUG_LEVEL_3, "ObjBuffer", __FUNCTION__, __LINE__, " 获取位于单元 %d 的ObjBuffer对象指针", index);   
+    PRINT(DEBUG_LEVEL_3, "ObjBuffer", __FUNCTION__, __LINE__, " 获取位于单元 %d 的ObjBuffer对象指针", index);  
 
     if (index >= circleLen)
     {

@@ -28,6 +28,6 @@ public:
     void SetPath(std::string path_);           // 设置路径
     bool IsInTimeRange(DateTime time);         // 该时间点是否在记录区间 
     void SetVideoLen(uint videoLength_);       // 设置视频长度 
-    std::string GetPath();                     // 获取文件路径  
+    std::string GetPath();                     // 获取文件路径    
 
 };

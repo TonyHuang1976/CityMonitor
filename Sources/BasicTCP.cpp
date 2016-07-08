@@ -15,6 +15,7 @@
  *=======================================================================================================================
  */
 #include "BasicTCP.h" 
+#include "Acceptor.h" 
 #include "Sender.h" 
 #include "Receiver.h" 
 #include "Debugger.h" 
@@ -43,18 +44,101 @@
 
 BasicTCP::BasicTCP()
 {
+    Init();
+}
+BasicTCP::BasicTCP(byte connectType)
+{
+    this->connectType = connectType;
+    Init();
+}
+
+BasicTCP::~BasicTCP()
+{
+    delete acceptor;
+}
+void BasicTCP::Init()
+{
     sockID = 0;
+    strcpy(connTypeStr[COMMAND_CHAN_CONNECTION], "命令通道");
+    strcpy(connTypeStr[LOCAL_CAMERA_CONNECTION], "本地IPC");
+    strcpy(connTypeStr[LEFT_NODE_CONNECTION],    "左邻连接");
+    strcpy(connTypeStr[RIGHT_NODE_CONNECTION],   "右邻连接");
+    strcpy(modeStr[MODE_CLIENT],   "客户端");
+    strcpy(modeStr[MODE_SERVER],   "服务器");
+
+    //PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s", connTypeStr[connectType], modeStr[mode], localIpAddr);
+    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s", connTypeStr[connectType], modeStr[mode]);
+
 #ifdef __WIN32__
     WSADATA Data;
     int status = WSAStartup(MAKEWORD(1, 1), &Data);
 #endif
 }
-
-BasicTCP::~BasicTCP()
+// 建立连接本地摄像机的服务器。小黄，请修改此函数内容，使用SDK的API读取视频数据
+void BasicTCP::CreateServer4Cam()
 {
-}
+    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s", connTypeStr[connectType], modeStr[mode], localIpAddr);
+
+    sockID = socket(PF_INET,SOCK_STREAM,0);
+    if( sockID < 0)
+    {
+        PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s - Socket创建错误", connTypeStr[connectType], modeStr[mode], localIpAddr);
+        return;
+    }
+#ifdef USE_LINGER_OPTION
+    struct linger lingerStruct;
+    lingerStruct.l_onoff = 1; //在调用close(socket)时还有数据未发送完，允许等待
+    lingerStruct.l_linger = 0;
+    setsockopt(sockID, SOL_SOCKET, SO_LINGER, (const char*)&lingerStruct, sizeof(lingerStruct));
+#else
+    int opt = 1; // 赋任意值，什么意义？
+    setsockopt(sockID, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+#endif
+    Bind();
+    Listen();
+#if 1
+    acceptor = new Acceptor(this);
+    acceptor->Init();
+#else
+    SOCKET acceptSock=Accept();
+    if(acceptSock>0)
+    { 
+        Receive(acceptSock);
+        Send(acceptSock);    
+    }
+    else
+    {      
+        PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s - Accept错误", connTypeStr[connectType], modeStr[mode], localIpAddr);
+    }
+#endif
+}       
+
 // 建立服务器连接
 void BasicTCP::CreateServer()
+{
+    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, "%s:%s:%s", connTypeStr[connectType], modeStr[mode], localIpAddr);
+
+    sockID = socket(PF_INET,SOCK_STREAM,0);
+    if (sockID < 0)
+    {
+        PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s - Socket创建错误", connTypeStr[connectType], modeStr[mode], localIpAddr);
+    }
+#ifdef USE_LINGER_OPTION
+    struct linger lingerStruct;
+    lingerStruct.l_onoff = 1; //在调用close(socket)时还有数据未发送完，允许等待
+    lingerStruct.l_linger = 0;
+    setsockopt(sockID, SOL_SOCKET, SO_LINGER, (const char*)&lingerStruct, sizeof(lingerStruct));
+#else
+    int opt = 1; // 赋任意值，什么意义？
+    setsockopt(sockID, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+#endif
+    Bind();
+    Listen();
+    acceptor = new Acceptor(this);
+    acceptor->Init();
+}       
+// 建立服务器连接 - 已过时，CreateServer调试完成后删除
+void BasicTCP::CreateServerOld()
 {
         PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__);
 
@@ -65,16 +149,16 @@ void BasicTCP::CreateServer()
             PRINT(ALWAYS_PRINT, "Create Socket Failed", __FUNCTION__, __LINE__);
         }
         {
-            struct linger l;
-            l.l_onoff = 1; //在调用close(socket)时还有数据未发送完，允许等待
-            l.l_linger = 0;
-            setsockopt(sockID, SOL_SOCKET, SO_LINGER, (const char*)&l, sizeof(l));
+            struct linger lingerStruct;
+            lingerStruct.l_onoff = 1; //在调用close(socket)时还有数据未发送完，允许等待
+            lingerStruct.l_linger = 0;
+            setsockopt(sockID, SOL_SOCKET, SO_LINGER, (const char*)&lingerStruct, sizeof(lingerStruct));
 
             int opt =1;
             setsockopt(sockID, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
         }
 
-     Bind1();
+     Bind();
      Listen();
 //  while(1)
     {
@@ -93,14 +177,15 @@ void BasicTCP::CreateServer()
 // 建立客户端连接
 void BasicTCP::CreateClient()
 {
-    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__);
-//  #ifdef LINUX
+    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s", connTypeStr[connectType], modeStr[mode], localIpAddr);
     int maxConnectRetryTime=0 ;
     bool isConnected= false;
     do
  {
      sockID=socket(AF_INET, SOCK_STREAM, 0); //建立socket
-//   signal(SIGPIPE,SIG_IGN);
+#ifndef __WIN32__
+     signal(SIGPIPE,SIG_IGN);
+#endif   
      bool isConnected=Connect() ;
      if(isConnected)
     { 
@@ -111,19 +196,19 @@ void BasicTCP::CreateClient()
             Close();
             Elapse(5);
 
-            PRINT(ALWAYS_PRINT, "connect the server error and retry", __FUNCTION__, __LINE__);
+            PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s - 无法连接服务器, 第 %d 次尝试", connTypeStr[connectType], modeStr[mode], localIpAddr, maxConnectRetryTime);
         }
     }while((maxConnectRetryTime++)<MAX_NUM_CONN_TIME);
     
-    if(!isConnected){
-        PRINT(ALWAYS_PRINT, "connect the server error", __FUNCTION__, __LINE__);
+    if (!isConnected)
+    {
+        //PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s：%s：%s - 放弃连接服务器, 客户端创建失败", connTypeStr[connectType], modeStr[mode], localIpAddr);
     }
     
-//#endif     
     
 }                                   
 
-// 工作在服务器模式时接受远程客户端的连接
+// 工作在服务器模式时接受远程客户端的连接 - 已经过时，Acceptor调试完成时删除
 SOCKET BasicTCP::Accept()
 {
     PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__);
@@ -143,7 +228,7 @@ SOCKET BasicTCP::Accept()
     }
     return -1;
 }           
-
+// 已经过时，Acceptor调试完成时删除
 void BasicTCP::Bind2()
 {
     struct sockaddr_in server_addr;
@@ -166,9 +251,9 @@ void BasicTCP::Bind2()
 }
 
 // 做网络连接的端口及IP地址的绑定
-void BasicTCP::Bind1()
+void BasicTCP::Bind()
 {
-    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__);
+    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s", connTypeStr[connectType], modeStr[mode], localIpAddr);
     //#ifdef LINUX
     int server_len ;
     struct sockaddr_in address;
@@ -184,7 +269,7 @@ void BasicTCP::Bind1()
 // 工作在客户端模式时连接远程服务器
 bool BasicTCP::Connect()
 {
-    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__);
+    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s", connTypeStr[connectType], modeStr[mode], localIpAddr);
     struct sockaddr_in address;
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = inet_addr(remoteIpAddr);
@@ -195,8 +280,7 @@ bool BasicTCP::Connect()
     if(result != 0)
     {
         int err = errno;
-//      printf("binderror: %s \n",   strerror(errno));
-        PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, "connecterror: %s \n",   strerror(errno));
+        PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s - 客户端连接错误代码：%s", connTypeStr[connectType], modeStr[mode], localIpAddr, strerror(errno));
         return false;
     }
 
@@ -205,18 +289,15 @@ bool BasicTCP::Connect()
 // 工作在服务器模式时开始等待远程客户端的连接
 void BasicTCP::Listen()
 {
-    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__);
-//#ifdef LINUX
+    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s", connTypeStr[connectType], modeStr[mode], localIpAddr);
   /*  Now connect our socket to the server's socket.  */
-  int rest = listen(sockID, 5);
+    int ret = listen(sockID, 5);
   
-  if (0 != rest)
-  {
-         int err = errno;
-          //    printf("binderror: %s \n",   strerror(errno));
-         PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, "connecterror: %s \n",   strerror(errno));
-  }
-//#endif
+    if (0 != ret)
+    {
+        int err = errno;
+        PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s - 倾听错误代码:%s - ", connTypeStr[connectType], modeStr[mode], localIpAddr, strerror(errno));
+    }
 }                       
 // 从网络连接的另一端接收数据。这可能是一个下行的命令，也可能是一段上行的视频数据。该函数需要在一个线程中运行。
 // 1. 与本地摄像机连接：接收来自本地摄像机的视频数据
@@ -224,8 +305,8 @@ void BasicTCP::Listen()
 // 3. 与左邻视频单元连接：接收左邻视频单元转发的来自远程监控中心的下行命令
 int BasicTCP::Receive(SOCKET socket)
 {
-    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__);
-    Receiver* receiver = new Receiver(socket, writeBuffer); //读线程
+    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s", connTypeStr[connectType], modeStr[mode], localIpAddr);
+    Receiver* receiver = new Receiver(socket, writeBuffer); // 网络数据接收及缓循环冲器写数据线程
     receiver->Init();
 
     ThreadManager::GetInstance()->AddSocketThread(socket, receiver);
@@ -237,8 +318,8 @@ int BasicTCP::Receive(SOCKET socket)
 // 3. 与左邻视频单元连接：发送或转发视频流
 int BasicTCP::Send(SOCKET socket)
 {
-    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__);
-    Sender* sender = new Sender(socket, readBuffer); //写线程
+    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s", connTypeStr[connectType], modeStr[mode], localIpAddr);
+    Sender* sender = new Sender(socket, readBuffer); // 循环缓冲器数据读出及数据发送至网络线程
     sender->Init();
 
     ThreadManager::GetInstance()->AddSocketThread(socket, sender);
@@ -247,7 +328,7 @@ int BasicTCP::Send(SOCKET socket)
 // 关闭连接
 void BasicTCP::Close()
 {
-    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__);
+    PRINT(ALWAYS_PRINT, "BasicTCP", __FUNCTION__, __LINE__, " %s:%s:%s", connTypeStr[connectType], modeStr[mode], localIpAddr);
 #ifdef __WIN32__
     shutdown(sockID, SD_BOTH);
     closesocket(sockID);
@@ -268,7 +349,10 @@ void BasicTCP::Elapse(int  timeout) //定时函数
     select(0,NULL,NULL,NULL,&tval);
 #endif
 }                       
-
+SOCKET BasicTCP::GetSockID()
+{
+    return sockID;
+}
 /*
 http://c.biancheng.net/cpp/html/3031.html
 

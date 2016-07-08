@@ -20,10 +20,6 @@
 #include "Global.h" 
 #include "BasicTCP.h" 
 
-#define     LOCAL_CAMERA_CONNECTION             1
-#define     RIGHT_NODE_CONNECTION           2
-#define     REMOTE_VIDEO_UNIT_CONNECTION        3
-
 
 class VideoManager;
 class Buffer;
@@ -31,13 +27,13 @@ class Buffer;
 class TcpConn : public BasicTCP
 {
 public:
-    TcpConn(byte mode, VideoManager* manager, Buffer* readBuffer, Buffer* writeBuffer);
-    TcpConn(byte mode);
+    TcpConn(byte mode, byte connectType, VideoManager* manager, Buffer* readBuffer, Buffer* writeBuffer);
+    TcpConn(byte mode, byte connectType, VideoManager* manager);
     virtual ~TcpConn();
 
 private:
-    byte            config;             // 定义本连接的用途：连接本地摄像机、上一级摄像机、还是下一级视频处理单元
-    VideoManager*   manager;            // 本视频节点的视频管理模块
+    byte            connectType;    // 定义本连接的用途：连接本地摄像机、上一级摄像机、还是下一级视频处理单元
+    VideoManager*   manager;        // 本视频节点的视频管理模块
 
 public:
     void SetLocalInfo(char* ipAddr, uint port);     // 设置网络连接的本地地址和端口

@@ -1,6 +1,6 @@
 #include "ThreadManager.h"
 #include "Debugger.h"
-
+#include <cstring>
 ThreadManager *ThreadManager::_instance = NULL;  
 
 ThreadManager::ThreadManager()
@@ -28,8 +28,11 @@ bool ThreadManager::AddSocketThread(SOCKET socketID, Sender *sender, Receiver *r
 
     struct sockaddr_in peeraddr;
     int len = sizeof(peeraddr);
+#ifdef __WIN32__
     int ret = getpeername(socketID, (struct sockaddr *)&peeraddr, &len);
-
+#else
+    int ret = getpeername(socketID, (struct sockaddr *)&peeraddr, (socklen_t *)&len);
+#endif
     if(ret < 0)
     {
         return false;

@@ -31,7 +31,7 @@ Receiver::Receiver(SOCKET socket, Buffer* buffer)
 {
     this->socket = socket;
     this->buffer = buffer;
-//  this->Init();
+
 }
 Receiver::~Receiver()
 {
@@ -40,20 +40,37 @@ void Receiver::Start()
 {
     while (0 != isTerminted)
     {
-
-/*
-If no error occurs, this function returns the number of bytes received. If the connection has been gracefully closed, 
-the return value is zero. If an error occurs, a value of SOCKET_ERROR is returned, and a specific error code can be 
-retrieved by calling WSAGetLastError
-*/
-//      int len = recv( socket, (char*)recvBuffer, NUM_BYTES_TO_RECEIVE_EACH_TIME, MSG_OOB );   // 考虑每次应该接收多少字节？MSG_OOB or MSG_PEEK ?
+        /*
+        If no error occurs, this function returns the number of bytes received. If the connection has been gracefully closed,
+        the return value is zero. If an error occurs, a value of SOCKET_ERROR is returned, and a specific error code can be
+        retrieved by calling WSAGetLastError
+        */
+        //int len = recv( socket, (char*)recvBuffer, NUM_BYTES_TO_RECEIVE_EACH_TIME, MSG_OOB ); // 考虑每次应该接收多少字节？MSG_OOB or MSG_PEEK ?
         int len = recv( socket, (char*)recvBuffer, NUM_BYTES_TO_RECEIVE_EACH_TIME, 0 ); // 0为没有特殊效果
-
         if (len > 0)
         {
             uint i = 0;
+            int result=0;
+
+        #if 0
+            printf("receive data=%d\n",len);
+            for ( int j=0 ; j<len; j++ )
+            {
+                printf("%x  ",*(recvBuffer + j));
+                if(((j+1)%16) == 0)
+                    printf("\n");
+            }
+            printf("\n");
+            printf("receive data end\n");
+            result=codec->ParseDataPackage(recvBuffer,len);
+            printf("receive data send=%d,%d\n",len,result);
+
             // 将本次接收到的数据存入循环缓冲器 buffer 中
+            while (( len > 0 ) && (result > 0))
+        #else
+            PRINT(ALWAYS_PRINT, "Receiver", __FUNCTION__, __LINE__, "Received Data=%s,%d\n",recvBuffer,len);
             while ( len > 0 )
+        #endif
             {
                 // 查询循环缓冲器剩余空间
                 uint writelen = 0;
@@ -70,7 +87,8 @@ retrieved by calling WSAGetLastError
                 if (writelen > 0)
                 {
                     // 循环缓冲器本次可写入availLen个字节
-                    buffer->Write(recvBuffer + i, writelen);    // 写入数据
+                    result=buffer->Write(recvBuffer + i, writelen); // 写入数据
+                    //PRINT(ALWAYS_PRINT, "Receiver", __FUNCTION__, __LINE__, "write len=%d,%d\n",writelen,result);
                     len -= writelen;                            // 计算下次可写入的字节数
                     i  += writelen;                         // 调整数据源地址指针
                 }
